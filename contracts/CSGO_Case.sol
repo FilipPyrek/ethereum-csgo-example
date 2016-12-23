@@ -9,6 +9,7 @@ contract CSGO_Case {
 
   uint lastId = 0;
   mapping (address => Case[]) inventories;
+  mapping (bytes32 => address) caseToOwner;
 
   function create(uint colllectionId){
     bytes32 caseId = sha3("case", block.number, colllectionId, ++lastId);
@@ -16,13 +17,18 @@ contract CSGO_Case {
       id: caseId,
       collectionId: colllectionId
     }));
+    caseToOwner[caseId] = msg.sender;
   }
 
-  function get(address owner, bytes32 caseId) returns (uint a){
+  function getByOwnerCaseId(address owner, bytes32 caseId) returns (uint a){
     Case[] cases = inventories[owner];
     for (uint i = 0; i < cases.length; i++)
       if (cases[i].id == caseId) return cases[i].collectionId;
     throw;
+  }
+
+  function getByCaseId(bytes32 caseId) returns (uint cid) {
+    return getByOwnerCaseId(caseToOwner[caseId], caseId);
   }
 
   function list(address owner, uint offset) returns (bytes32[64] ids, uint maxOffset) {

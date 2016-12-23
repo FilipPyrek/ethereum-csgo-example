@@ -53,4 +53,44 @@ contract('CSGO_Case', (accounts) => {
     });
   });
 
+  it("should get info about case by account and caseId", () => {
+    var csgo_case = CSGO_Case.deployed();
+
+    return Promise.all([
+      csgo_case.create.sendTransaction(123, { from: accounts[3] }),
+      csgo_case.create.sendTransaction(465, { from: accounts[3] }),
+      csgo_case.create.sendTransaction(789, { from: accounts[3] }),
+      csgo_case.create.sendTransaction(753, { from: accounts[3] })
+    ]).then(() => {
+      csgo_case.list.call(accounts[3], 0, { from: accounts[3] }).then((data) => {
+        const ids = data[0];
+
+        return csgo_case.getByOwnerCaseId.call(accounts[3], ids[0], { from: accounts[3] })
+          .then((data) => {
+            assert.equal(data.valueOf(), 123, "Call didn't return correct info about case");
+          });
+      });
+    });
+  });
+
+  it("should get info about case by caseId", () => {
+    var csgo_case = CSGO_Case.deployed();
+
+    return Promise.all([
+      csgo_case.create.sendTransaction(123, { from: accounts[4] }),
+      csgo_case.create.sendTransaction(465, { from: accounts[4] }),
+      csgo_case.create.sendTransaction(789, { from: accounts[4] }),
+      csgo_case.create.sendTransaction(753, { from: accounts[4] })
+    ]).then(() => {
+      csgo_case.list.call(accounts[4], 1, { from: accounts[4] }).then((data) => {
+        const ids = data[0];
+
+        return csgo_case.getByCaseId.call(ids[1], { from: accounts[4] })
+          .then((data) => {
+            assert.equal(data.valueOf(), 789, "Call didn't return correct info about case");
+          });
+      });
+    });
+  });
+
 });
