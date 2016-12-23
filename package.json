@@ -1,0 +1,27 @@
+{
+  "name": "ethereum-csgo-example",
+  "version": "1.0.0",
+  "description": "This repository is related to the article on medium.com",
+  "scripts": {
+    "test": "truffle test",
+    "watch": "watch 'truffle test' ./test ./contracts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FilipPyrek/ethereum-csgo-example.git"
+  },
+  "keywords": [
+    "ethereum",
+    "csgo",
+    "smart contracts"
+  ],
+  "author": "Filip Pyrek",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/FilipPyrek/ethereum-csgo-example/issues"
+  },
+  "homepage": "https://github.com/FilipPyrek/ethereum-csgo-example#readme",
+  "devDependencies": {
+    "watch": "^1.0.1"
+  }
+}
