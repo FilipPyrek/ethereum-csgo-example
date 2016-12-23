@@ -1,2 +1,3 @@
-# ethereum-csgo-example
-Example of moving CS:GO economy to Ethereum
+# Etherem CS:GO example
+
+This repository is related to the [article on medium.com](https://medium.com)
