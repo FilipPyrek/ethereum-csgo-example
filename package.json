@@ -23,5 +23,8 @@
   "homepage": "https://github.com/FilipPyrek/ethereum-csgo-example#readme",
   "devDependencies": {
     "watch": "^1.0.1"
+  },
+  "dependencies": {
+    "zeppelin-solidity": "^1.0.0"
   }
 }
