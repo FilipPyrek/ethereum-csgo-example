@@ -157,4 +157,39 @@ contract('CaseContract', (accounts) => {
     });
   });
 
+  it('should return 3 items if 5 items are created and offset is set to 2', () => {
+    const cscase = CaseContract.deployed();
+    const account = accounts[8];
+
+    return Promise.all([
+      cscase.emit.sendTransaction(account, 15, 1, { from: owner }),
+      cscase.emit.sendTransaction(account, 16, 2, { from: owner }),
+      cscase.emit.sendTransaction(account, 17, 5, { from: owner }),
+      cscase.emit.sendTransaction(account, 18, 2, { from: owner }),
+      cscase.emit.sendTransaction(account, 19, 1, { from: owner })
+    ]).then(() => {
+      return cscase.getByOwner.call(account, 2, { from: account }).then((data) => {
+        assert.equal(
+          data[0].valueOf(), 5,
+          `Max offset doesn't equal to number of items`
+        );
+        assert.equal(
+          data[1].length, data[2].length,
+          `Ids array length doesn't equal CollectionIds array length`
+        );
+        assert.equal(
+          data[1].length, 128,
+          `Ids array doesn't have expected length of 128`
+        );
+        assert.equal(
+          data[1].reduce((accumulator, itemId) =>
+            itemId.valueOf() == 0 ? accumulator : accumulator + 1
+          , 0),
+          3,
+          'Count of items is not 3'
+        );
+      });
+    });
+  });
+
 });
