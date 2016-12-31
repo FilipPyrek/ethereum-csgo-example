@@ -1,95 +1,159 @@
-contract('CSGO_Case', (accounts) => {
+contract('CaseContract', (accounts) => {
+  const owner = accounts[0];
 
-  it('should create a case', () => {
-    var csgo_case = CSGO_Case.deployed();
-
-    return csgo_case.create.sendTransaction(456, 1, { from: accounts[0] });
-  });
-
-  it("should return 64 ids (3 taken, 61 empty)", () => {
-    var csgo_case = CSGO_Case.deployed();
+  it('should return 128 slots (3 items, 125 empty)', () => {
+    const cscase = CaseContract.deployed();
+    const account = accounts[1];
 
     return Promise.all([
-      csgo_case.create.sendTransaction(123, { from: accounts[1] }),
-      csgo_case.create.sendTransaction(465, { from: accounts[1] }),
-      csgo_case.create.sendTransaction(789, { from: accounts[1] })
+      cscase.emit.sendTransaction(account, 1, 1, { from: owner }),
+      cscase.emit.sendTransaction(account, 2, 1, { from: owner }),
+      cscase.emit.sendTransaction(account, 3, 2, { from: owner })
     ]).then(() => {
-      csgo_case.list.call(accounts[1], 0, { from: accounts[1] }).then((data) => {
-        const ids = data[0];
-        const maxValue = data[1].valueOf();
-        assert.equal(ids.length, 64, "Call didn't return 64 ids");
-        assert.equal(ids.reduce(function(accumulator, id) {
-          return web3.toDecimal(id) > 0 ? accumulator + 1 : accumulator;
-        }, 0), 3, "Call didn't return 3 taken ids");
-        assert.equal(ids.reduce(function(accumulator, id) {
-          return web3.toDecimal(id) == 0 ? accumulator + 1 : accumulator;
-        }, 0), 61, "Call didn't return 61 empty ids");
-        assert.equal(maxValue, 3, "Call didn't return correct maxOffset");
+      return cscase.getByOwner.call(account, 0, { from: account }).then((data) => {
+        assert.equal(
+          data[0].valueOf(), 3,
+          `Max offset doesn't equal to number of items`
+        );
+        assert.equal(
+          data[1].length, data[2].length,
+          `Ids array length doesn't equal CollectionIds array length`
+        );
+        assert.equal(
+          data[1].length, 128,
+          `Ids array doesn't have expected length of 128`
+        );
       });
     });
   });
 
-  it("should return 64 ids (2 taken, 62 empty) - offset test", () => {
-    var csgo_case = CSGO_Case.deployed();
+  it(`max offset from 'getByOwner' should equal to value from 'getDepositSize'`, () => {
+    const cscase = CaseContract.deployed();
+    const account = accounts[2];
 
     return Promise.all([
-      csgo_case.create.sendTransaction(123, { from: accounts[2] }),
-      csgo_case.create.sendTransaction(465, { from: accounts[2] }),
-      csgo_case.create.sendTransaction(789, { from: accounts[2] }),
-      csgo_case.create.sendTransaction(753, { from: accounts[2] })
+      cscase.emit.sendTransaction(account, 4, 1, { from: owner }),
+      cscase.emit.sendTransaction(account, 5, 2, { from: owner }),
+      cscase.emit.sendTransaction(account, 6, 3, { from: owner }),
+      cscase.emit.sendTransaction(account, 7, 3, { from: owner })
     ]).then(() => {
-      csgo_case.list.call(accounts[2], 2, { from: accounts[2] }).then((data) => {
-        const ids = data[0];
-        const maxValue = data[1].valueOf();
-        assert.equal(ids.length, 64, "Call didn't return 64 ids");
-        assert.equal(ids.reduce((accumulator, id) =>
-          web3.toDecimal(id) > 0 ? accumulator + 1 : accumulator
-        , 0), 2, "Call didn't return 2 taken ids");
-        assert.equal(ids.reduce((accumulator, id) =>
-          web3.toDecimal(id) == 0 ? accumulator + 1 : accumulator
-        , 0), 62, "Call didn't return 62 empty ids");
-        assert.equal(maxValue, 4, "Call didn't return correct maxOffset");
+      return cscase.getByOwner.call(account, 0, { from: account }).then((data) => {
+        return cscase.getDepositSize.call(account, 0, { from: account }).then((depositSize) => {
+          assert.equal(
+            data[0].valueOf(), depositSize,
+            `Max offset doesn't equal to deposit size`
+          );
+          assert.equal(
+            depositSize, 4,
+            `Deposit size doesn't equal to number of items`
+          );
+        });
       });
     });
   });
 
-  it("should get info about case by account and caseId", () => {
-    var csgo_case = CSGO_Case.deployed();
+  it(`should throw an error because of duplicated id while 'emit'`, () => {
+    const cscase = CaseContract.deployed();
+    const account = accounts[3];
+
+    return cscase.emit.sendTransaction(account, 8, 1, { from: owner }).then(() => {
+      return cscase.emit.sendTransaction(account, 8, 1, { from: owner })
+        .then(() => {
+          assert(
+            false,
+            'Transaction with duplicated id was successful'
+          );
+        })
+        .catch((err) => {
+          if (err.name == 'AssertionError') throw err;
+          assert(
+            err.message.includes('invalid JUMP'),
+            `Transaction with duplicated id didn't throw an 'invalid JUMP'`
+          );
+        });
+    });
+  });
+
+  it(`should successfully create items using 'emit'`, () => {
+    const cscase = CaseContract.deployed();
+    const account = accounts[4];
 
     return Promise.all([
-      csgo_case.create.sendTransaction(123, { from: accounts[3] }),
-      csgo_case.create.sendTransaction(465, { from: accounts[3] }),
-      csgo_case.create.sendTransaction(789, { from: accounts[3] }),
-      csgo_case.create.sendTransaction(753, { from: accounts[3] })
-    ]).then(() => {
-      csgo_case.list.call(accounts[3], 0, { from: accounts[3] }).then((data) => {
-        const ids = data[0];
+      cscase.emit.sendTransaction(account, 9, 1, { from: owner }),
+      cscase.emit.sendTransaction(account, 10, 1, { from: owner }),
+      cscase.emit.sendTransaction(account, 11, 1, { from: owner })
+    ])
+    .catch((err) => {
+      assert(
+        !err.message.includes('invalid JUMP'),
+        `Some of transactions didn't succeed`
+      );
+    });
+  });
 
-        return csgo_case.getByOwnerCaseId.call(accounts[3], ids[0], { from: accounts[3] })
-          .then((data) => {
-            assert.equal(data.valueOf(), 123, "Call didn't return correct info about case");
+  it(`should successfully remove item using 'remove'`, () => {
+    const cscase = CaseContract.deployed();
+    const account = accounts[5];
+
+    return cscase.emit.sendTransaction(account, 12, 4, { from: owner }).then(() => {
+      return cscase.remove.sendTransaction(12, { from: owner }).then(() => {
+        return cscase.getById.call(12, { from: account })
+          .then(() => {
+            assert(
+              false,
+              'Item was not removed.'
+            );
+          })
+          .catch((err) => {
+            if (err.name == 'AssertionError') throw err;
+            assert(
+              err.message.includes('invalid JUMP'),
+              `Getting removed item by ID didn't throw 'invalid JUMP'`
+            );
           });
       });
     });
   });
 
-  it("should get info about case by caseId", () => {
-    var csgo_case = CSGO_Case.deployed();
+  it(`should not allow creation of the item`, () => {
+    const cscase = CaseContract.deployed();
+    const account = accounts[6];
 
-    return Promise.all([
-      csgo_case.create.sendTransaction(123, { from: accounts[4] }),
-      csgo_case.create.sendTransaction(465, { from: accounts[4] }),
-      csgo_case.create.sendTransaction(789, { from: accounts[4] }),
-      csgo_case.create.sendTransaction(753, { from: accounts[4] })
-    ]).then(() => {
-      csgo_case.list.call(accounts[4], 1, { from: accounts[4] }).then((data) => {
-        const ids = data[0];
-
-        return csgo_case.getByCaseId.call(ids[1], { from: accounts[4] })
-          .then((data) => {
-            assert.equal(data.valueOf(), 789, "Call didn't return correct info about case");
-          });
+    return cscase.emit.sendTransaction(account, 13, 4, { from: account })
+      .then(() => {
+        assert(
+          false,
+          'Item was created.'
+        );
+      })
+      .catch((err) => {
+        if (err.name == 'AssertionError') throw err;
+        assert(
+          err.message.includes('invalid JUMP'),
+          `Trying to create an item didn't throw 'invalid JUMP'`
+        );
       });
+  });
+
+  it(`should not allow removal of the item`, () => {
+    const cscase = CaseContract.deployed();
+    const account = accounts[7];
+
+    return cscase.emit.sendTransaction(account, 14, 4, { from: owner }).then(() => {
+      return cscase.remove.sendTransaction(14, { from: account })
+        .then(() => {
+          assert(
+            false,
+            'Item was removed.'
+          );
+        })
+        .catch((err) => {
+          if (err.name == 'AssertionError') throw err;
+          assert(
+            err.message.includes('invalid JUMP'),
+            `Trying to remove an item didn't throw 'invalid JUMP'`
+          );
+        });
     });
   });
 
