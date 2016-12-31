@@ -4,7 +4,7 @@
   "description": "This repository is related to the article on medium.com",
   "scripts": {
     "test": "truffle test",
-    "watch": "watch 'truffle test' ./test ./contracts"
+    "watch": "watch 'truffle test' ./test ./contracts ./migrations"
   },
   "repository": {
     "type": "git",
@@ -24,7 +24,5 @@
   "devDependencies": {
     "watch": "^1.0.1"
   },
-  "dependencies": {
-    "zeppelin-solidity": "^1.0.0"
-  }
+  "dependencies": {}
 }
